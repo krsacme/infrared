@@ -1,0 +1,33 @@
+heat_template_version: pike
+
+description: >
+  This is an example showing how you can do firstboot configuration
+  of the nodes via cloud-init.  To enable this, replace the default
+  mapping of OS::TripleO::NodeUserData in ../overcloud_resource_registry*
+
+resources:
+  userdata:
+    type: OS::Heat::MultipartMime
+    properties:
+      parts:
+      - config: {get_resource: disable_default_ovs_user}
+
+  disable_default_ovs_user:
+    type: OS::Heat::SoftwareConfig
+    properties:
+      config: |
+        #!/bin/bash
+        set -x
+        # With virtual environment, non-root user setup is not working wit uio.
+        # Until it is sorted out, use it with root user only.
+        sed -i 's@^OVS_USER_ID=.*@OVS_USER_ID="root:root"@' /etc/sysconfig/openvswitch
+
+        # https://dpdk-guide.gitlab.io/dpdk-guide/setup/binding.html#vfio-no-iommu
+        modprobe vfio-pci
+        echo 1 > /sys/module/vfio/parameters/enable_unsafe_noiommu_mode
+        echo "options vfio enable_unsafe_noiommu_mode=1" > /etc/modprobe.d/vfio-noiommu.conf
+
+
+outputs:
+  OS::stack_id:
+    value: {get_resource: userdata}

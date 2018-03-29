@@ -322,6 +322,11 @@ subparsers:
                       default: no
                       help: Use OVN (HA) instead of ML2 and OVS.
 
+                  network-dpdk:
+                      type: Bool
+                      default: no
+                      help: Enabled DPDK on ComputeOvsDpdk role
+
             - title: Overcloud Public Network
               options:
                   public-network:

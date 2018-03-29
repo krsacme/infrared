@@ -247,6 +247,16 @@ resources:
                               # force the MAC address of the bridge to this interface
                               primary: true
 
+{% if install.network.dpdk %}
+                        -
+                          type: ovs_bridge
+                          name: br-provider
+                          members:
+                            -
+                              type: interface
+                              name: nic4
+{% endif %}
+
 outputs:
   OS::stack_id:
     description: The OsNetConfigImpl resource.

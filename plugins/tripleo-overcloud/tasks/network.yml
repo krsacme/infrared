@@ -129,3 +129,55 @@
       dest: "~/overcloud_deploy.sh"
       line: '-e {{ template_base }}/network/dvr-override.yaml \'
   when: install.network.dvr
+
+#### KRS
+# This is not working for now, figure out why? Could you because of docker service of ovs-dpdk-agent?
+#- name: Append plan-environment file to trigger derive parameters worflow
+#  lineinfile:
+#      dest: "~/overcloud_deploy.sh"
+#      line: '  -p {{ install.heat.templates.basedir }}/plan-samples/plan-environment-derived-params.yaml \'
+#  when: install.network.dpdk
+
+- name: Append the host config environment file to configure the kernel args and tuned
+  lineinfile:
+      dest: "~/overcloud_deploy.sh"
+      line: '  -e {{ install.heat.templates.basedir }}/environments/host-config-and-reboot.yaml \'
+  when: install.network.dpdk
+
+- name: Append the OVS-DPDK environment file
+  lineinfile:
+      dest: "~/overcloud_deploy.sh"
+      line: '  -e {{ install.heat.templates.basedir }}/environments/services-docker/neutron-ovs-dpdk.yaml \'
+  when: install.network.dpdk
+
+- name: Append the OVS-DPDK permissions environments file only for fresh install
+  lineinfile:
+      dest: "~/overcloud_deploy.sh"
+      line: '  -e {{ install.heat.templates.basedir }}/environments/ovs-dpdk-permissions.yaml \'
+  when:
+    - install.network.dpdk
+    - install.upgrade is not defined or not install.upgrade
+
+- name: Create directory for DPDK configs
+  file:
+    path: "{{ template_base }}/dpdk"
+    state: directory
+  when: install.network.dpdk
+
+- name: Copy DPDK first-boot environment file
+  copy:
+      dest: "{{ template_base }}/dpdk/first-boot-dpdk.yaml"
+      src: "files/first-boot-dpdk.yaml"
+  when: install.network.dpdk
+
+- name: Copy DPDK parameter environment file
+  copy:
+      dest: "{{ template_base }}/dpdk/config_dpdk.yaml"
+      src: "files/config_dpdk.yaml"
+  when: install.network.dpdk
+
+- name: Append the OVS-DPDK parameters environment file
+  lineinfile:
+      dest: "~/overcloud_deploy.sh"
+      line: '  -e {{ template_base }}/dpdk/config_dpdk.yaml \'
+  when: install.network.dpdk
